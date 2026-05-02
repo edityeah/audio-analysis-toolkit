@@ -1,138 +1,145 @@
-# AI-Powered Audio Analysis Toolkit
+# Audio Analysis Toolkit
 
-A powerful, Python-based toolkit for transcribing and analyzing audio using [AssemblyAI](https://www.assemblyai.com/).  
+A web app for transcribing and analyzing audio — speaker labels, sentiment, topics, summary, and an Ask-Anything chatbot — powered by [AssemblyAI](https://www.assemblyai.com/).
 
-We use the following tech stack:
+🌐 Live: **https://toolkit.adityeah.in**
 
-- AssemblyAI for audio transcription and analysis (audio-RAG)
-- Streamlit for the interactive web UI
-- Cursor as the MCP host for programmatic access
+Every signed-in user gets **10 free minutes of transcription per 30-day window** — no credit card.
 
-## 🚀 Features
+---
 
-### Audio Transcription
-- Speaker-labeled, timestamped transcription
-- Supports `.mp3`, `.wav`, `.mp4`, `.m4a`, and `.flac`
+## ✨ What it does
 
-### Audio Intelligence & Analysis
-- Sentiment detection (Positive/Neutral/Negative)
-- Speaker diarization
-- Topic extraction (IAB categories)
-- Auto-summary generation
-- Ask-anything chatbot based on transcript
+- **Transcription** with timestamps across mp3, wav, m4a, mp4, flac
+- **Speaker detection** (auto diarization)
+- **Sentiment analysis** per utterance (positive / neutral / negative)
+- **Auto-summary** of the full recording
+- **Topic detection** (IAB categories)
+- **Ask-Anything chat** over the transcript (powered by AssemblyAI Lemur + Claude)
 
-### Dual Modes of Use
-1. **Streamlit UI** – For interactive web usage  
-2. **MCP Server (Model Context Protocol)** – For Claude + Cursor integration
+Two ways to feed it audio:
 
-## Setup and Installation
+- **Upload** an audio file (up to 10 min)
+- **Record live** in your browser via the mic
 
-Ensure you have Python 3.12 or later installed on your system.
+---
 
-### Install dependencies
+## 🏗️ Architecture
+
+```
+                ┌─────────────────────────────────────┐
+toolkit.adityeah│  Next.js (App Router) on Vercel     │
+                │  • Landing, auth, onboarding,       │
+                │    dashboard, /app analysis surface │
+                └────────────┬────────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────────┐
+        │                    │                        │
+        ▼                    ▼                        ▼
+   ┌─────────┐        ┌─────────────┐        ┌──────────────┐
+   │  Clerk  │        │  Vercel Blob│        │ Neon Postgres│
+   │ (auth)  │        │ (audio CDN) │        │ (users +     │
+   │         │        │             │        │  transcripts)│
+   └─────────┘        └─────┬───────┘        └──────────────┘
+                            │
+                            ▼  signed audio_url
+                      ┌──────────────┐
+                      │  AssemblyAI  │
+                      │  (transcribe │
+                      │   + Lemur)   │
+                      └──────────────┘
+```
+
+**Stack**
+
+- **Next.js 16** (App Router, React 19, Turbopack, Tailwind v4) — `web/`
+- **Clerk** — Google SSO + email-OTP authentication
+- **Neon Postgres** + **Drizzle ORM** — users, transcripts, quota tracking
+- **Vercel Blob** — direct browser-to-CDN audio uploads (bypasses serverless body limits)
+- **AssemblyAI** — transcription, diarization, sentiment, topics, summarization, Lemur chat
+
+---
+
+## 🧰 Local development
+
+You'll need: Node 20+, a Clerk app, a Neon project, a Vercel Blob token, and an AssemblyAI API key.
 
 ```bash
-# Clone the repository and navigate to the project directory
-# git clone <your-repo-url>
-cd project-name
-
-# Create a virtual environment
-python -m venv .venv
-
-# Activate the virtual environment
-# MacOS/Linux
-source .venv/bin/activate
-# Windows
-.venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+cd web
+npm install
 ```
 
-## Configure environment variables
-Copy `.env.example` to `.env` and configure the following environment variables:
+Create `web/.env.local` with:
 
 ```
-ASSEMBLYAI_API_KEY=your_assemblyai_api_key
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_…
+CLERK_SECRET_KEY=sk_test_…
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/onboarding
+DATABASE_URL=postgresql://…@…neon.tech/neondb?sslmode=require
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_…
+ASSEMBLYAI_API_KEY=…
 ```
 
-## Usage
+Bootstrap the DB schema in your Neon SQL editor:
 
-### 1. Run as a Streamlit App (Interactive UI)
+```sql
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_id TEXT NOT NULL UNIQUE,
+  email TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  purpose TEXT,
+  window_started_at TIMESTAMPTZ,
+  seconds_used INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_users_clerk_id ON users(clerk_id);
 
-Launch the web app for interactive audio analysis:
+CREATE TABLE IF NOT EXISTS transcripts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  assemblyai_id TEXT NOT NULL UNIQUE,
+  file_name TEXT,
+  source TEXT NOT NULL,
+  audio_duration_seconds INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'processing',
+  debited INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_transcripts_user_id ON transcripts(user_id);
+CREATE INDEX IF NOT EXISTS idx_transcripts_assemblyai_id ON transcripts(assemblyai_id);
+```
+
+Then:
 
 ```bash
-streamlit run app.py
+npm run dev
+# → http://localhost:3000
 ```
 
-- **Upload Audio**: Drag and drop or browse for audio files (WAV, MP3, MP4, M4A, FLAC)
-- **Processing**: The app automatically processes your audio with AssemblyAI
-- **Analysis**: Navigate through different tabs to explore results:
-  - View timestamped transcription
-  - Read AI-generated summaries
-  - Analyze speaker patterns
-  - Explore sentiment analysis
-  - Discover key topics
-  - Chat with your audio content
+---
 
-### 2. Run as an MCP Server (for Cursor/Agent Integration)
+## 📁 Repo layout
 
-First, set up your MCP server as follows:
-
-1. Go to Cursor settings
-2. Select MCP Tools
-3. Add new global MCP server.
-4. In the JSON file, add this:
-
-```json
-{
-    "mcpServers": {
-        "assemblyai": {
-            "command": "python",
-            "args": [
-                "server.py"
-            ],
-            "env": {
-                "ASSEMBLYAI_API_KEY": "YOUR_ASSEMBLYAI_API_KEY"
-            }
-        }
-    }
-}
 ```
-You should now be able to see the MCP server listed in the MCP settings. In Cursor MCP settings make sure to toggle the button to connect the server to the host.
+.
+├── web/             ← The Next.js app (everything user-facing)
+├── legacy/          ← Original Streamlit + MCP-server prototype (no longer deployed)
+├── README.md
+└── .gitignore
+```
 
-Done! Your server is now up and running.
+---
 
-## MCP Tools
+## 📬 About
 
-The custom MCP server provides the following tools:
+Built by **Aditya Chaudhari**.
 
-- **transcribe_audio**: Ingests and transcribes audio, returning sentences with timestamps
-- **get_audio_data**: Retrieves features from the last transcript, including:
-  - Full transcript text
-  - Timestamped sentences
-  - Summary
-  - Speaker labels
-  - Sentiment analysis
-  - Topic categories
-
-You can now ingest your audio files, retrieve relevant data, and query it all using the Cursor Agent or any MCP-compatible client. The agent can analyze, summarize, and answer questions about your audio just with a single query.
-
-## 📬 Stay Updated with MY Newsletter!
-
-Our lives are dominated by software, but we don’t understand it very well!
-You might work at a tech company, a bank, a financial services firm, or in healthcare, but there’s one common thread that pervades your professional circles: software. This is probably one of the 8+ hours a day that you spend using your phone or computer (check your screen time: it’s depressing). And man, software is complicated.
-
-Ideally, we’d all love to understand what an API is, how to talk to your coworkers about programming languages, and why your laptop won’t connect to the goddamn airport WiFi. But this stuff is hard. You’ve tried googling things you don’t get, but every concept seems to require understanding another concept, and the people writing these guides aren’t very…er…engaging. That’s what this blog is for.
-(https://news.adityeah.in/)
-
-## Contribution
-
-Contributions are welcome! Feel free to fork this repository and submit pull requests with your improvements.
-
-## Author
-Aditya Chaudhari <br>
-🚀 Building AI-first products at scale <br>
-🔗 Visit My Blog: https://news.adityeah.in/  
-💼 LinkedIn: https://www.linkedin.com/in/adityacbcc/
+- 🔗 Blog: https://news.adityeah.in/
+- 💼 LinkedIn: https://www.linkedin.com/in/adityacbcc/

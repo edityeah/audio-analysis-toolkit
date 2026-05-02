@@ -43,6 +43,7 @@ export type AAITranscript = {
   text?: string;
   summary?: string;
   audio_duration?: number;
+  audio_url?: string;
   utterances?: AAIUtterance[] | null;
   sentiment_analysis_results?: AAISentimentResult[] | null;
   iab_categories_result?: {

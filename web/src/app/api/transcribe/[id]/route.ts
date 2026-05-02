@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { fetchTranscript } from "@/lib/assemblyai";
 import {
@@ -9,6 +10,18 @@ import {
   markTranscriptFailed,
   refundUserSeconds,
 } from "@/lib/db/queries";
+
+// AssemblyAI keeps its own copy once a transcript reaches a terminal state,
+// so the original blob in Vercel storage is dead weight. Delete it best-effort.
+async function tryDeleteBlob(url: string | undefined) {
+  if (!url || !url.includes(".public.blob.vercel-storage.com")) return;
+  try {
+    await del(url);
+  } catch (e) {
+    // Already deleted or transient — log and move on, don't fail the poll.
+    console.warn("Blob cleanup failed for", url, e);
+  }
+}
 
 export async function GET(
   _request: Request,
@@ -39,9 +52,11 @@ export async function GET(
       if (delta > 0) await debitUserSeconds(user.id, delta);
       else if (delta < 0) await refundUserSeconds(user.id, -delta);
       await markTranscriptCompleted(local.id, actual);
+      await tryDeleteBlob(remote.audio_url);
     } else if (remote.status === "error") {
       await refundUserSeconds(user.id, local.audioDurationSeconds);
       await markTranscriptFailed(local.id);
+      await tryDeleteBlob(remote.audio_url);
     }
   }
 
