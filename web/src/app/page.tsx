@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Show, UserButton } from "@clerk/nextjs";
 
 const features = [
   {
@@ -75,18 +76,29 @@ export default function LandingPage() {
           />
         </Link>
         <div className="flex items-center gap-3">
-          <Link
-            href="/sign-in"
-            className="rounded-lg px-4 py-2 text-sm text-white/80 transition hover:text-white"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/sign-up"
-            className="rounded-lg bg-gradient-to-br from-[#7c5cff] to-[#00d4ff] px-4 py-2 text-sm font-medium text-white shadow-lg shadow-purple-900/30 transition hover:-translate-y-0.5 hover:shadow-purple-900/50"
-          >
-            Get started — free
-          </Link>
+          <Show when="signed-out">
+            <Link
+              href="/sign-in"
+              className="rounded-lg px-4 py-2 text-sm text-white/80 transition hover:text-white"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/sign-up"
+              className="rounded-lg bg-gradient-to-br from-[#7c5cff] to-[#00d4ff] px-4 py-2 text-sm font-medium text-white shadow-lg shadow-purple-900/30 transition hover:-translate-y-0.5 hover:shadow-purple-900/50"
+            >
+              Get started — free
+            </Link>
+          </Show>
+          <Show when="signed-in">
+            <Link
+              href="/dashboard"
+              className="rounded-lg bg-gradient-to-br from-[#7c5cff] to-[#00d4ff] px-4 py-2 text-sm font-medium text-white shadow-lg shadow-purple-900/30 transition hover:-translate-y-0.5 hover:shadow-purple-900/50"
+            >
+              Open dashboard →
+            </Link>
+            <UserButton appearance={{ elements: { userButtonAvatarBox: "h-8 w-8" } }} />
+          </Show>
         </div>
       </nav>
 
