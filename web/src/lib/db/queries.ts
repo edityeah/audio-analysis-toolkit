@@ -146,3 +146,15 @@ export async function getRecentTranscripts(
     .orderBy(desc(transcripts.createdAt))
     .limit(limit);
 }
+
+export async function getTranscriptById(
+  userId: string,
+  id: string,
+): Promise<Transcript | null> {
+  const rows = await db
+    .select()
+    .from(transcripts)
+    .where(and(eq(transcripts.id, id), eq(transcripts.userId, userId)))
+    .limit(1);
+  return rows[0] ?? null;
+}

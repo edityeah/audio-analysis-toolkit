@@ -129,40 +129,68 @@ export default async function DashboardPage() {
         {/* Recent activity (only if any) */}
         {recent.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-4 text-lg font-bold">Recent transcripts</h2>
+            <h2 className="mb-1 text-lg font-bold">Recent transcripts</h2>
+            <p className="mb-4 text-sm text-white/55">
+              Click any completed row to view the transcript, tabs, and chat.
+            </p>
             <div className="overflow-hidden rounded-2xl border border-white/10">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-white/[0.04] text-xs uppercase tracking-wider text-white/55">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">File</th>
-                    <th className="px-4 py-3 font-medium">Source</th>
-                    <th className="px-4 py-3 font-medium">Duration</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">When</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {recent.map((t) => (
-                    <tr key={t.id} className="hover:bg-white/[0.03]">
-                      <td className="max-w-[18rem] truncate px-4 py-3 text-white/85">
+              <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-x-4 bg-white/[0.04] px-4 py-3 text-xs font-medium uppercase tracking-wider text-white/55">
+                <div>File</div>
+                <div>Source</div>
+                <div>Duration</div>
+                <div>Status</div>
+                <div>When</div>
+                <div />
+              </div>
+              <div className="divide-y divide-white/5">
+                {recent.map((t) => {
+                  const cells = (
+                    <>
+                      <div className="truncate text-white/85">
                         {t.fileName ?? "Live recording"}
-                      </td>
-                      <td className="px-4 py-3 text-white/65">
+                      </div>
+                      <div className="text-white/65">
                         {t.source === "upload" ? "Upload" : "Recording"}
-                      </td>
-                      <td className="px-4 py-3 text-white/65">
+                      </div>
+                      <div className="text-white/65">
                         {(t.audioDurationSeconds / 60).toFixed(1)} min
-                      </td>
-                      <td className="px-4 py-3">
+                      </div>
+                      <div>
                         <StatusPill status={t.status} />
-                      </td>
-                      <td className="px-4 py-3 text-white/55">
-                        {timeAgo(t.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                      <div className="text-white/55">{timeAgo(t.createdAt)}</div>
+                      <div className="text-right text-[#b5a8ff]">
+                        {t.status === "processing" ? (
+                          <span className="text-white/30">…</span>
+                        ) : (
+                          "View →"
+                        )}
+                      </div>
+                    </>
+                  );
+
+                  if (t.status === "processing") {
+                    return (
+                      <div
+                        key={t.id}
+                        className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 text-sm"
+                      >
+                        {cells}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={t.id}
+                      href={`/app/${t.id}`}
+                      className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3 text-sm transition hover:bg-[#7c5cff]/10"
+                    >
+                      {cells}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
