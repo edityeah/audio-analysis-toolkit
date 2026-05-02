@@ -37,6 +37,10 @@ export async function POST(request: Request): Promise<NextResponse> {
             "audio/m4a",
             "audio/x-m4a",
             "audio/flac",
+            // Browser MediaRecorder often labels audio-only WebM blobs as
+            // video/webm (Chrome) or video/mp4 (Safari). AssemblyAI handles
+            // both as audio just fine.
+            "video/webm",
             "video/mp4",
           ],
           // 200 MB hard cap per file (well above ~10-min audio at typical bitrates)
