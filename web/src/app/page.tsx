@@ -68,10 +68,10 @@ export default function LandingPage() {
           <Image
             src="/logo.png"
             alt="Adityeah"
-            width={120}
-            height={56}
+            width={200}
+            height={94}
             priority
-            className="h-10 w-auto rounded-md"
+            className="h-14 w-auto rounded-md sm:h-16"
           />
         </Link>
         <div className="flex items-center gap-3">
