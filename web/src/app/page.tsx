@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const features = [
@@ -58,10 +59,21 @@ export default function LandingPage() {
       />
 
       {/* Nav */}
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <span className="text-lg font-semibold tracking-tight">
-          🎵 Audio Analysis Toolkit
-        </span>
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <Link
+          href="/"
+          aria-label="Adityeah — home"
+          className="inline-flex items-center transition hover:opacity-90"
+        >
+          <Image
+            src="/logo.png"
+            alt="Adityeah"
+            width={120}
+            height={56}
+            priority
+            className="h-10 w-auto rounded-md"
+          />
+        </Link>
         <div className="flex items-center gap-3">
           <Link
             href="/sign-in"
@@ -84,6 +96,9 @@ export default function LandingPage() {
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7c5cff]" />
           Powered by AssemblyAI · 10 free minutes / month
         </div>
+        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.28em] text-[#b5a8ff]">
+          🎵 Audio Analysis Toolkit
+        </p>
         <h1 className="bg-gradient-to-r from-[#7c5cff] via-[#00d4ff] to-[#ff5ca8] bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
           Make sense of any audio,
           <br />
