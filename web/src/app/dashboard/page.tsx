@@ -101,12 +101,18 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mt-8 rounded-2xl border border-[#7c5cff]/25 bg-gradient-to-br from-[#1a1438] to-[#14102a] p-7">
-          <h2 className="mb-2 text-xl font-bold">🚧 Streamlit app launch button — coming next</h2>
-          <p className="text-sm text-white/65">
-            In the next phase we&apos;ll wire up the &ldquo;Launch app&rdquo; button
-            so you can jump straight into recording or uploading audio. For now,
-            sign-up + profile + quota tracking are all working end-to-end.
+          <h2 className="mb-2 text-xl font-bold">Ready to transcribe?</h2>
+          <p className="mb-5 text-sm text-white/65">
+            Upload an audio file or record live in your browser. We&apos;ll
+            transcribe it, label speakers, and extract sentiment + topics — all
+            counted against your 10 free minutes.
           </p>
+          <Link
+            href="/app"
+            className="inline-block rounded-xl bg-gradient-to-br from-[#7c5cff] to-[#00d4ff] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-purple-900/30 transition hover:-translate-y-0.5 hover:shadow-purple-900/60"
+          >
+            Launch app →
+          </Link>
         </div>
       </section>
     </main>
