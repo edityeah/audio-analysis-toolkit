@@ -157,7 +157,7 @@ body {
 }
 @keyframes blink { 50% { opacity: .35; } }
 
-.aat-demo-body { padding: 24px 26px 22px; min-height: 480px; display: flex; flex-direction: column; gap: 18px; }
+.aat-demo-body { padding: 24px 26px 22px; height: 540px; overflow: hidden; display: flex; flex-direction: column; gap: 18px; }
 
 .aat-wave { display: flex; align-items: center; gap: 3px; height: 36px; padding: 0 4px; }
 .aat-wave span {
